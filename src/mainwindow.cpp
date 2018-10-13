@@ -3611,8 +3611,8 @@ void MainWindow::on_modList_customContextMenuRequested(const QPoint &pos)
       menu = new QMenu(this);
       allMods->setTitle(tr("All Mods"));
       menu->addMenu(allMods);
-      ModInfo::Ptr info = ModInfo::getByIndex(m_ContextRow);
-      std::vector<ModInfo::EFlag> flags = info->getFlags();
+      const auto info = ModInfo::getByIndex(m_ContextRow);
+      auto flags = info->getFlags();
       if (std::find(flags.begin(), flags.end(), ModInfo::FLAG_OVERWRITE) != flags.end()) {
         if (QDir(info->absolutePath()).count() > 2) {
           menu->addAction(tr("Sync to Mods..."), &m_OrganizerCore, SLOT(syncOverwrite()));
@@ -3625,7 +3625,8 @@ void MainWindow::on_modList_customContextMenuRequested(const QPoint &pos)
         menu->addAction(tr("Remove Backup..."), this, SLOT(removeMod_clicked()));
       } else if (std::find(flags.begin(), flags.end(), ModInfo::FLAG_FOREIGN) != flags.end()) {
         // nop, nothing to do with this mod
-      } else {
+      }
+      else {
         QMenu *addRemoveCategoriesMenu = new QMenu(tr("Change Categories"));
         populateMenuCategories(addRemoveCategoriesMenu, 0);
         connect(addRemoveCategoriesMenu, SIGNAL(aboutToHide()), this, SLOT(addRemoveCategories_MenuHandler()));

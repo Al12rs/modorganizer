@@ -41,6 +41,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QDirIterator>
 #include <QMutexLocker>
 #include <QSettings>
+#include "modInfoseparator.h"
 
 using namespace MOBase;
 using namespace MOShared;
@@ -61,17 +62,23 @@ bool ModInfo::ByName(const ModInfo::Ptr &LHS, const ModInfo::Ptr &RHS)
 }
 
 
-ModInfo::Ptr ModInfo::createFrom(PluginContainer *pluginContainer, const MOBase::IPluginGame *game, const QDir &dir, DirectoryEntry **directoryStructure)
+ModInfo::Ptr ModInfo::createFrom
+  (PluginContainer* pluginContainer, const IPluginGame* game, const QDir& dir, DirectoryEntry** directoryStructure)
 {
   QMutexLocker locker(&s_Mutex);
-//  int id = s_NextID++;
+  //  int id = s_NextID++;
   static QRegExp backupExp(".*backup[0-9]*");
-  ModInfo::Ptr result;
-  if (backupExp.exactMatch(dir.dirName())) {
-    result = ModInfo::Ptr(new ModInfoBackup(pluginContainer, game, dir, directoryStructure));
-  } else {
-    result = ModInfo::Ptr(new ModInfoRegular(pluginContainer, game, dir, directoryStructure));
+  static QRegExp separetorExp(".*separator[0-9]*");
+  Ptr            result;
+  if (backupExp.exactMatch(dir.dirName()))
+  {
+    result = Ptr(new ModInfoBackup(pluginContainer, game, dir, directoryStructure));
   }
+  else if (separetorExp.exactMatch(dir.dirName()))
+  {
+    result = Ptr(new ModInfoSeparator(pluginContainer, game, dir, directoryStructure));
+  }
+  else { result = Ptr(new ModInfoRegular(pluginContainer, game, dir, directoryStructure)); }
   s_Collection.push_back(result);
   return result;
 }
