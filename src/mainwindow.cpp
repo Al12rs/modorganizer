@@ -3607,7 +3607,8 @@ void MainWindow::on_modList_customContextMenuRequested(const QPoint &pos)
     if (m_ContextRow == -1) {
       // no selection
       menu = allMods;
-    } else {
+    }
+    else {
       menu = new QMenu(this);
       allMods->setTitle(tr("All Mods"));
       menu->addMenu(allMods);
@@ -3620,11 +3621,17 @@ void MainWindow::on_modList_customContextMenuRequested(const QPoint &pos)
           menu->addAction(tr("Clear Overwrite..."), this, SLOT(clearOverwrite()));
         }
         menu->addAction(tr("Open in Explorer"), this, SLOT(openExplorer_clicked()));
-      } else if (std::find(flags.begin(), flags.end(), ModInfo::FLAG_BACKUP) != flags.end()) {
+      }
+      else if (std::find(flags.begin(), flags.end(), ModInfo::FLAG_BACKUP) != flags.end()) {
         menu->addAction(tr("Restore Backup"), this, SLOT(restoreBackup_clicked()));
         menu->addAction(tr("Remove Backup..."), this, SLOT(removeMod_clicked()));
-      } else if (std::find(flags.begin(), flags.end(), ModInfo::FLAG_FOREIGN) != flags.end()) {
+      }
+      else if (std::find(flags.begin(), flags.end(), ModInfo::FLAG_FOREIGN) != flags.end()) {
         // nop, nothing to do with this mod
+      }
+      else if (std::find(flags.begin(), flags.end(), ModInfo::FLAG_SEPARATOR) != flags.end()) {
+        menu->addAction(tr("Remove Mod..."), this, SLOT(removeMod_clicked()));
+        menu->addAction(tr("Rename Mod..."), this, SLOT(renameMod_clicked()));
       }
       else {
         QMenu *addRemoveCategoriesMenu = new QMenu(tr("Change Categories"));
@@ -3632,13 +3639,13 @@ void MainWindow::on_modList_customContextMenuRequested(const QPoint &pos)
         connect(addRemoveCategoriesMenu, SIGNAL(aboutToHide()), this, SLOT(addRemoveCategories_MenuHandler()));
         addMenuAsPushButton(menu, addRemoveCategoriesMenu);
 
-		//Removed as it was redundant, just making the categories look more complicated.
-		/*
+        //Removed as it was redundant, just making the categories look more complicated.
+        /*
         QMenu *replaceCategoriesMenu = new QMenu(tr("Replace Categories"));
         populateMenuCategories(replaceCategoriesMenu, 0);
         connect(replaceCategoriesMenu, SIGNAL(aboutToHide()), this, SLOT(replaceCategories_MenuHandler()));
         addMenuAsPushButton(menu, replaceCategoriesMenu);
-		*/
+        */
 
         QMenu *primaryCategoryMenu = new QMenu(tr("Primary Category"));
         connect(primaryCategoryMenu, SIGNAL(aboutToShow()), this, SLOT(addPrimaryCategoryCandidates()));
@@ -3651,7 +3658,8 @@ void MainWindow::on_modList_customContextMenuRequested(const QPoint &pos)
         if (info->updateAvailable() || info->downgradeAvailable()) {
           if (info->updateIgnored()) {
             menu->addAction(tr("Un-ignore update"), this, SLOT(unignoreUpdate()));
-          } else {
+          }
+          else {
             menu->addAction(tr("Ignore update"), this, SLOT(ignoreUpdate()));
           }
         }
@@ -3665,33 +3673,33 @@ void MainWindow::on_modList_customContextMenuRequested(const QPoint &pos)
 
         menu->addAction(tr("Rename Mod..."), this, SLOT(renameMod_clicked()));
         menu->addAction(tr("Reinstall Mod"), this, SLOT(reinstallMod_clicked()));
-		    menu->addAction(tr("Remove Mod..."), this, SLOT(removeMod_clicked()));
+        menu->addAction(tr("Remove Mod..."), this, SLOT(removeMod_clicked()));
         menu->addAction(tr("Create Backup"), this, SLOT(backupMod_clicked()));
 
 
-		    menu->addSeparator();
+        menu->addSeparator();
 
         if (info->getNexusID() > 0) {
           switch (info->endorsedState()) {
-            case ModInfo::ENDORSED_TRUE: {
-              menu->addAction(tr("Un-Endorse"), this, SLOT(unendorse_clicked()));
-            } break;
-            case ModInfo::ENDORSED_FALSE: {
-              menu->addAction(tr("Endorse"), this, SLOT(endorse_clicked()));
-              menu->addAction(tr("Won't endorse"), this, SLOT(dontendorse_clicked()));
-            } break;
-            case ModInfo::ENDORSED_NEVER: {
-              menu->addAction(tr("Endorse"), this, SLOT(endorse_clicked()));
-            } break;
-            default: {
-              QAction *action = new QAction(tr("Endorsement state unknown"), menu);
-              action->setEnabled(false);
-              menu->addAction(action);
-            } break;
+          case ModInfo::ENDORSED_TRUE: {
+            menu->addAction(tr("Un-Endorse"), this, SLOT(unendorse_clicked()));
+          } break;
+          case ModInfo::ENDORSED_FALSE: {
+            menu->addAction(tr("Endorse"), this, SLOT(endorse_clicked()));
+            menu->addAction(tr("Won't endorse"), this, SLOT(dontendorse_clicked()));
+          } break;
+          case ModInfo::ENDORSED_NEVER: {
+            menu->addAction(tr("Endorse"), this, SLOT(endorse_clicked()));
+          } break;
+          default: {
+            QAction *action = new QAction(tr("Endorsement state unknown"), menu);
+            action->setEnabled(false);
+            menu->addAction(action);
+          } break;
           }
         }
 
-		menu->addSeparator();
+        menu->addSeparator();
 
         std::vector<ModInfo::EFlag> flags = info->getFlags();
         if (std::find(flags.begin(), flags.end(), ModInfo::FLAG_INVALID) != flags.end()) {
@@ -3702,9 +3710,10 @@ void MainWindow::on_modList_customContextMenuRequested(const QPoint &pos)
           menu->addAction(tr("Mark as converted/working"), this, SLOT(markConverted_clicked()));
         }
 
-        if (info->getNexusID() > 0)  {
+        if (info->getNexusID() > 0) {
           menu->addAction(tr("Visit on Nexus"), this, SLOT(visitOnNexus_clicked()));
-        } else if ((info->getURL() != "")) {
+        }
+        else if ((info->getURL() != "")) {
           menu->addAction(tr("Visit web page"), this, SLOT(visitWebPage_clicked()));
         }
 
@@ -3718,9 +3727,11 @@ void MainWindow::on_modList_customContextMenuRequested(const QPoint &pos)
     }
 
     menu->exec(modList->mapToGlobal(pos));
-  } catch (const std::exception &e) {
+  }
+  catch (const std::exception &e) {
     reportError(tr("Exception: ").arg(e.what()));
-  } catch (...) {
+  }
+  catch (...) {
     reportError(tr("Unknown exception"));
   }
 }

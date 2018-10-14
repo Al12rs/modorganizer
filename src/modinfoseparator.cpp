@@ -2,11 +2,9 @@
 
 std::vector<ModInfo::EFlag> ModInfoSeparator::getFlags() const
 {
-  {
-    auto result = ModInfoRegular::getFlags();
-    result.insert(result.begin(), FLAG_BACKUP);
-    return result;
-  }
+  std::vector<ModInfo::EFlag> result = ModInfoRegular::getFlags();
+  result.insert(result.begin(), ModInfo::FLAG_SEPARATOR);
+  return result;
 }
 
 
