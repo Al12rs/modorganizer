@@ -74,12 +74,22 @@ static bool operator<(const ModFileListWidget &LHS, const ModFileListWidget &RHS
 }
 
 
-ModInfoDialog::ModInfoDialog(ModInfo::Ptr modInfo, const DirectoryEntry *directory, bool unmanaged, OrganizerCore *organizerCore, PluginContainer *pluginContainer, QWidget *parent)
-  : TutorableDialog("ModInfoDialog", parent), ui(new Ui::ModInfoDialog), m_ModInfo(modInfo),
-  m_ThumbnailMapper(this), m_RequestStarted(false),
-  m_DeleteAction(nullptr), m_RenameAction(nullptr), m_OpenAction(nullptr),
-  m_Directory(directory), m_Origin(nullptr),
-  m_OrganizerCore(organizerCore), m_PluginContainer(pluginContainer)
+ModInfoDialog::ModInfoDialog
+  (
+    const ModInfo::Ptr& modInfo, const DirectoryEntry* directory, const bool unmanaged, OrganizerCore* organizerCore,
+    PluginContainer* pluginContainer, QWidget* parent)
+  : TutorableDialog("ModInfoDialog", parent)
+  , ui(new Ui::ModInfoDialog)
+  , m_ModInfo(modInfo)
+  , m_ThumbnailMapper(this)
+  , m_OrganizerCore(organizerCore)
+  , m_PluginContainer(pluginContainer)
+  , m_RequestStarted(false)
+  , m_DeleteAction(nullptr)
+  , m_RenameAction(nullptr)
+  , m_OpenAction(nullptr)
+  , m_Directory(directory)
+  , m_Origin(nullptr)
 {
   ui->setupUi(this);
   this->setWindowTitle(modInfo->name());
@@ -87,23 +97,26 @@ ModInfoDialog::ModInfoDialog(ModInfo::Ptr modInfo, const DirectoryEntry *directo
 
   m_RootPath = modInfo->absolutePath();
 
-  QString metaFileName = m_RootPath.mid(0).append("/meta.ini");
+  const auto metaFileName = m_RootPath.mid(0).append("/meta.ini");
   m_Settings = new QSettings(metaFileName, QSettings::IniFormat);
 
-  QLineEdit *modIDEdit = findChild<QLineEdit*>("modIDEdit");
+  const auto modIDEdit = findChild<QLineEdit*>("modIDEdit");
   ui->modIDEdit->setValidator(new QIntValidator(modIDEdit));
   ui->modIDEdit->setText(QString("%1").arg(modInfo->getNexusID()));
 
   connect(ui->modIDEdit, SIGNAL(linkClicked(QString)), this, SLOT(linkClicked(QString)));
 
-  QString gameName = modInfo->getGameName();
+  const auto gameName = modInfo->getGameName();
   ui->sourceGameEdit->addItem(organizerCore->managedGame()->gameName(), organizerCore->managedGame()->gameShortName());
-  if (organizerCore->managedGame()->validShortNames().size() == 0) {
-    ui->sourceGameEdit->setDisabled(true);
-  } else {
-    for (auto game : pluginContainer->plugins<IPluginGame>()) {
-      for (QString gameName : organizerCore->managedGame()->validShortNames()) {
-        if (game->gameShortName().compare(gameName, Qt::CaseInsensitive) == 0) {
+  if (organizerCore->managedGame()->validShortNames().empty()) { ui->sourceGameEdit->setDisabled(true); }
+  else
+  {
+    for (auto game : pluginContainer->plugins<IPluginGame>())
+    {
+      for (const auto& gameN : organizerCore->managedGame()->validShortNames())
+      {
+        if (game->gameShortName().compare(gameN, Qt::CaseInsensitive) == 0)
+        {
           ui->sourceGameEdit->addItem(game->gameName(), game->gameShortName());
           break;
         }
@@ -123,18 +136,33 @@ ModInfoDialog::ModInfoDialog(ModInfo::Ptr modInfo, const DirectoryEntry *directo
   //TODO: No easy way to delegate links
   //ui->descriptionView->page()->acceptNavigationRequest(QWebEnginePage::DelegateAllLinks);
 
+  //TODO: leaking???
   new QShortcut(QKeySequence::Delete, this, SLOT(delete_activated()));
 
-  if (directory->originExists(ToWString(modInfo->name()))) {
+  if (directory->originExists(ToWString(modInfo->name())))
+  {
     m_Origin = &directory->getOriginByName(ToWString(modInfo->name()));
-    if (m_Origin->isDisabled()) {
-      m_Origin = nullptr;
-    }
+    if (m_Origin->isDisabled()) { m_Origin = nullptr; }
   }
 
   refreshLists();
 
-  if (unmanaged) {
+  if (modInfo->hasFlag(ModInfo::FLAG_SEPARATOR))
+  {
+    ui->tabWidget->setTabEnabled(TAB_TEXTFILES, false);
+    ui->tabWidget->setTabEnabled(TAB_INIFILES, false);
+    ui->tabWidget->setTabEnabled(TAB_IMAGES, false);
+    ui->tabWidget->setTabEnabled(TAB_ESPS, false);
+    ui->tabWidget->setTabEnabled(TAB_CONFLICTS, false);
+    //ui->tabWidget->setTabEnabled(TAB_CATEGORIES, false);
+    addCategories(CategoryFactory::instance(), modInfo->getCategories(), ui->categoriesTree->invisibleRootItem(), 0);
+    refreshPrimaryCategoriesBox();
+    ui->tabWidget->setTabEnabled(TAB_NEXUS, false);
+    //ui->tabWidget->setTabEnabled(TAB_NOTES, false);
+    ui->tabWidget->setTabEnabled(TAB_FILETREE, false);
+  }
+  else if (unmanaged)
+  {
     ui->tabWidget->setTabEnabled(TAB_INIFILES, false);
     ui->tabWidget->setTabEnabled(TAB_CATEGORIES, false);
     ui->tabWidget->setTabEnabled(TAB_NEXUS, false);
@@ -143,7 +171,9 @@ ModInfoDialog::ModInfoDialog(ModInfo::Ptr modInfo, const DirectoryEntry *directo
     ui->tabWidget->setTabEnabled(TAB_ESPS, false);
     ui->tabWidget->setTabEnabled(TAB_TEXTFILES, false);
     ui->tabWidget->setTabEnabled(TAB_IMAGES, false);
-  } else {
+  }
+  else
+  {
     initFiletree(modInfo);
     addCategories(CategoryFactory::instance(), modInfo->getCategories(), ui->categoriesTree->invisibleRootItem(), 0);
     refreshPrimaryCategoriesBox();
@@ -155,16 +185,16 @@ ModInfoDialog::ModInfoDialog(ModInfo::Ptr modInfo, const DirectoryEntry *directo
 
   ui->tabWidget->setTabEnabled(TAB_CONFLICTS, m_Origin != nullptr);
 
-  if (ui->tabWidget->currentIndex() == TAB_NEXUS) {
-    activateNexusTab();
-  }
+  if (ui->tabWidget->currentIndex() == TAB_NEXUS) { activateNexusTab(); }
 
   ui->endorseBtn->setEnabled((m_ModInfo->endorsedState() == ModInfo::ENDORSED_FALSE) ||
-                             (m_ModInfo->endorsedState() == ModInfo::ENDORSED_NEVER));
+    (m_ModInfo->endorsedState() == ModInfo::ENDORSED_NEVER));
 
   // activate first enabled tab
-  for (int i = 0; i < ui->tabWidget->count(); ++i) {
-    if (ui->tabWidget->isTabEnabled(i)) {
+  for (auto i = 0; i < ui->tabWidget->count(); ++i)
+  {
+    if (ui->tabWidget->isTabEnabled(i))
+    {
       ui->tabWidget->setCurrentIndex(i);
       break;
     }

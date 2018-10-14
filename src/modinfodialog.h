@@ -76,10 +76,14 @@ public:
   * @brief constructor
   *
   * @param modInfo info structure about the mod to display
-  * @param parent parend widget
+  * @param directory
+  * @param unmanaged
+  * @param organizerCore
+  * @param pluginContainer
+  * @param parent parents widget
   **/
- explicit ModInfoDialog(ModInfo::Ptr modInfo, const MOShared::DirectoryEntry *directory, bool unmanaged, OrganizerCore *organizerCore, PluginContainer *pluginContainer,QWidget *parent = 0);
-  ~ModInfoDialog();
+ explicit ModInfoDialog(const ModInfo::Ptr& modInfo, const MOShared::DirectoryEntry *directory, bool unmanaged, OrganizerCore *organizerCore, PluginContainer *pluginContainer,QWidget *parent = nullptr);
+  ~ModInfoDialog() override;
 
   /**
    * @brief retrieve the (user-modified) version of the mod
@@ -215,7 +219,7 @@ private:
   Ui::ModInfoDialog *ui;
 
   ModInfo::Ptr m_ModInfo;
-  int m_OriginID;
+  int m_OriginID{};
 
   QSignalMapper m_ThumbnailMapper;
   QString m_RootPath;
@@ -223,8 +227,8 @@ private:
   OrganizerCore *m_OrganizerCore;
   PluginContainer *m_PluginContainer;
 
-  QFileSystemModel *m_FileSystemModel;
-  QTreeView *m_FileTree;
+  QFileSystemModel *m_FileSystemModel{};
+  QTreeView *m_FileTree{};
   QModelIndexList m_FileSelection;
 
   QSettings *m_Settings;
@@ -235,11 +239,11 @@ private:
   QAction *m_DeleteAction;
   QAction *m_RenameAction;
   QAction *m_OpenAction;
-  QAction *m_NewFolderAction;
-  QAction *m_HideAction;
-  QAction *m_UnhideAction;
+  QAction *m_NewFolderAction{};
+  QAction *m_HideAction{};
+  QAction *m_UnhideAction{};
 
-  QTreeWidgetItem *m_ConflictsContextItem;
+  QTreeWidgetItem *m_ConflictsContextItem{};
 
   const MOShared::DirectoryEntry *m_Directory;
   MOShared::FilesOrigin *m_Origin;

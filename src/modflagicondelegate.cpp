@@ -49,6 +49,7 @@ QString ModFlagIconDelegate::getFlagIcon(ModInfo::EFlag flag) const
     case ModInfo::FLAG_CONFLICT_MIXED: return ":/MO/gui/emblem_conflict_mixed";
     case ModInfo::FLAG_CONFLICT_REDUNDANT: return ":MO/gui/emblem_conflict_redundant";
     case ModInfo::FLAG_ALTERNATE_GAME: return ":MO/gui/alternate_game";
+    //case ModInfo::FLAG_SEPARATOR: return ":/MO/gui/emblem_backup";
     default: return QString();
   }
 }

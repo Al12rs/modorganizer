@@ -2620,41 +2620,43 @@ void MainWindow::setWindowEnabled(bool enabled)
 }
 
 
-void MainWindow::modOpenNext(int tab)
+void MainWindow::modOpenNext(const int tab)
 {
   QModelIndex index = m_ModListSortProxy->mapFromSource(m_OrganizerCore.modList()->index(m_ContextRow, 0));
   index = m_ModListSortProxy->index((index.row() + 1) % m_ModListSortProxy->rowCount(), 0);
 
   m_ContextRow = m_ModListSortProxy->mapToSource(index).row();
-  ModInfo::Ptr mod = ModInfo::getByIndex(m_ContextRow);
-  std::vector<ModInfo::EFlag> flags = mod->getFlags();
-  if ((std::find(flags.begin(), flags.end(), ModInfo::FLAG_OVERWRITE) != flags.end()) ||
-      (std::find(flags.begin(), flags.end(), ModInfo::FLAG_BACKUP) != flags.end())) {
-    // skip overwrite and backups
+  const auto mod = ModInfo::getByIndex(m_ContextRow);
+  auto flags = mod->getFlags();
+  if (std::find(flags.begin(), flags.end(), ModInfo::FLAG_OVERWRITE) != flags.end() ||
+    std::find(flags.begin(), flags.end(), ModInfo::FLAG_BACKUP) != flags.end() ||
+    std::find(flags.begin(), flags.end(), ModInfo::FLAG_SEPARATOR) != flags.end()
+  )
+  {
+    // skip overwrite, backups and separators
     modOpenNext(tab);
-  } else {
-    displayModInformation(m_ContextRow,tab);
   }
+  else { displayModInformation(m_ContextRow, tab); }
 }
 
-void MainWindow::modOpenPrev(int tab)
+void MainWindow::modOpenPrev(const int tab)
 {
-  QModelIndex index = m_ModListSortProxy->mapFromSource(m_OrganizerCore.modList()->index(m_ContextRow, 0));
-  int row = index.row() - 1;
-  if (row == -1) {
-    row = m_ModListSortProxy->rowCount() - 1;
-  }
+  auto index = m_ModListSortProxy->mapFromSource(m_OrganizerCore.modList()->index(m_ContextRow, 0));
+  auto row = index.row() - 1;
+  if (row == -1) { row = m_ModListSortProxy->rowCount() - 1; }
 
   m_ContextRow = m_ModListSortProxy->mapToSource(m_ModListSortProxy->index(row, 0)).row();
-  ModInfo::Ptr mod = ModInfo::getByIndex(m_ContextRow);
-  std::vector<ModInfo::EFlag> flags = mod->getFlags();
-  if ((std::find(flags.begin(), flags.end(), ModInfo::FLAG_OVERWRITE) != flags.end()) ||
-      (std::find(flags.begin(), flags.end(), ModInfo::FLAG_BACKUP) != flags.end())) {
+  const auto mod = ModInfo::getByIndex(m_ContextRow);
+  auto flags = mod->getFlags();
+  if (std::find(flags.begin(), flags.end(), ModInfo::FLAG_OVERWRITE) != flags.end() ||
+    std::find(flags.begin(), flags.end(), ModInfo::FLAG_BACKUP) != flags.end() ||
+    std::find(flags.begin(), flags.end(), ModInfo::FLAG_SEPARATOR) != flags.end()
+  )
+  {
     // skip overwrite and backups
     modOpenPrev(tab);
-  } else {
-    displayModInformation(m_ContextRow,tab);
   }
+  else { displayModInformation(m_ContextRow, tab); }
 }
 
 void MainWindow::displayModInformation(const QString &modName, int tab)
@@ -2835,6 +2837,39 @@ void MainWindow::createEmptyMod_clicked()
   if (newMod == nullptr) {
     return;
   }
+
+  m_OrganizerCore.refreshModList();
+}
+
+void MainWindow::createSeparator_clicked()
+{
+  GuessedValue<QString> name;
+  name.setFilter(&fixDirectoryName);
+
+  while (name->isEmpty())
+  {
+    bool ok;
+    name.update(QInputDialog::getText(this, tr("Create Separator..."),
+                                      tr("This will create a new separator.\n"
+                                        "Please enter a name:"), QLineEdit::Normal, "", &ok),
+                GUESS_USER);
+    if (!ok) { return; }
+  }
+
+  if (m_OrganizerCore.getMod(name) != nullptr)
+  {
+    reportError(tr("A separator with this name already exists"));
+    return;
+  }
+
+  name->append("separator");
+
+  if (m_OrganizerCore.getMod(name) != nullptr)
+  {
+    return;
+  }
+
+  if (m_OrganizerCore.createMod(name) == nullptr) { return; }
 
   m_OrganizerCore.refreshModList();
 }
@@ -3579,6 +3614,8 @@ QMenu *MainWindow::modListContextMenu()
 
   menu->addAction(tr("Create empty mod"), this, SLOT(createEmptyMod_clicked()));
 
+  menu->addAction(tr("Create separator"), this, SLOT(createSeparator_clicked()));
+
   menu->addSeparator();
 
   menu->addAction(tr("Enable all visible"), this, SLOT(enableVisibleMods()));
@@ -3620,10 +3657,16 @@ void MainWindow::on_modList_customContextMenuRequested(const QPoint &pos)
           menu->addAction(tr("Clear Overwrite..."), this, SLOT(clearOverwrite()));
         }
         menu->addAction(tr("Open in Explorer"), this, SLOT(openExplorer_clicked()));
-      } else if (std::find(flags.begin(), flags.end(), ModInfo::FLAG_BACKUP) != flags.end()) {
+      }
+      else if (std::find(flags.begin(), flags.end(), ModInfo::FLAG_BACKUP) != flags.end()) {
         menu->addAction(tr("Restore Backup"), this, SLOT(restoreBackup_clicked()));
         menu->addAction(tr("Remove Backup..."), this, SLOT(removeMod_clicked()));
-      } else if (std::find(flags.begin(), flags.end(), ModInfo::FLAG_FOREIGN) != flags.end()) {
+      }
+      else if (std::find(flags.begin(), flags.end(), ModInfo::FLAG_SEPARATOR) != flags.end())
+      {
+        menu->addAction(tr("Remove Separator..."), this, SLOT(removeMod_clicked()));
+      }
+      else if (std::find(flags.begin(), flags.end(), ModInfo::FLAG_FOREIGN) != flags.end()) {
         // nop, nothing to do with this mod
       } else {
         QMenu *addRemoveCategoriesMenu = new QMenu(tr("Change Categories"));
@@ -3692,12 +3735,12 @@ void MainWindow::on_modList_customContextMenuRequested(const QPoint &pos)
 
 		menu->addSeparator();
 
-        std::vector<ModInfo::EFlag> flags = info->getFlags();
-        if (std::find(flags.begin(), flags.end(), ModInfo::FLAG_INVALID) != flags.end()) {
+        std::vector<ModInfo::EFlag> flag = info->getFlags();
+        if (std::find(flag.begin(), flag.end(), ModInfo::FLAG_INVALID) != flag.end()) {
           menu->addAction(tr("Ignore missing data"), this, SLOT(ignoreMissingData_clicked()));
         }
 
-        if (std::find(flags.begin(), flags.end(), ModInfo::FLAG_ALTERNATE_GAME) != flags.end()) {
+        if (std::find(flag.begin(), flag.end(), ModInfo::FLAG_ALTERNATE_GAME) != flag.end()) {
           menu->addAction(tr("Mark as converted/working"), this, SLOT(markConverted_clicked()));
         }
 
