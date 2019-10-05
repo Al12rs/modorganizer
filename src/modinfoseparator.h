@@ -55,6 +55,8 @@ public:
   virtual QDateTime getNexusLastModified() const { return QDateTime(); }
   virtual void setNexusLastModified(QDateTime) {}
   virtual QDateTime creationTime() const { return QDateTime(); }
+  virtual bool isSeparatorCollapsed() const { return m_SeparatorCollapsed; }
+  virtual void setSeparatorCollapsed(bool collapsed);
 
   virtual void getNexusFiles
     (
@@ -69,12 +71,12 @@ public:
   {
   }
 
-private:
+protected:
 
-  ModInfoSeparator
-    (
-      PluginContainer* pluginContainer, const MOBase::IPluginGame* game, const QDir& path,
-      MOShared::DirectoryEntry** directoryStructure);
+  ModInfoSeparator(PluginContainer* pluginContainer, 
+                   const MOBase::IPluginGame* game, const QDir& path,
+                   MOShared::DirectoryEntry** directoryStructure);
+
 };
 
 #endif

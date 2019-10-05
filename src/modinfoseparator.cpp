@@ -14,6 +14,11 @@ std::vector<ModInfo::EFlag> ModInfoSeparator::getFlags() const
   }
 }
 
+void ModInfoSeparator::setSeparatorCollapsed(bool collapsed) 
+{
+  m_SeparatorCollapsed = collapsed;
+}
+
 int ModInfoSeparator::getHighlight() const
 {
   return HIGHLIGHT_CENTER;

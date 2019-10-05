@@ -418,6 +418,10 @@ protected:
 
   ModInfoRegular(PluginContainer *pluginContainer, const MOBase::IPluginGame *game, const QDir &path, MOShared::DirectoryEntry **directoryStructure);
 
+  // This is only for separators but to avoid reading the meta 
+  // file twice we populate it in the main 
+  bool m_SeparatorCollapsed;
+
 private:
 
   QString m_Name;

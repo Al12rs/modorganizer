@@ -37,6 +37,7 @@ ModInfoRegular::ModInfoRegular(PluginContainer *pluginContainer, const IPluginGa
   , m_EndorsedState(ENDORSED_UNKNOWN)
   , m_TrackedState(TRACKED_UNKNOWN)
   , m_NexusBridge(pluginContainer)
+  , m_SeparatorCollapsed(false)
 {
   testValid();
   m_CreationTime = QFileInfo(path.absolutePath()).birthTime();
@@ -99,6 +100,7 @@ void ModInfoRegular::readMeta()
   m_Repository       = metaFile.value("repository", "Nexus").toString();
   m_Converted        = metaFile.value("converted", false).toBool();
   m_Validated        = metaFile.value("validated", false).toBool();
+  m_SeparatorCollapsed = metaFile.value("separatorCollapsed", false).toBool();
 
   // this handles changes to how the URL works after 2.2.0
   //
@@ -237,6 +239,7 @@ void ModInfoRegular::saveMeta()
       metaFile.setValue("converted", m_Converted);
       metaFile.setValue("validated", m_Validated);
       metaFile.setValue("color", m_Color);
+      metaFile.setValue("separatorCollapsed", m_SeparatorCollapsed);
       if (m_EndorsedState != ENDORSED_UNKNOWN) {
         metaFile.setValue("endorsed", m_EndorsedState);
       }
@@ -560,6 +563,7 @@ QColor ModInfoRegular::getColor()
 {
   return m_Color;
 }
+
 
 bool ModInfoRegular::remove()
 {

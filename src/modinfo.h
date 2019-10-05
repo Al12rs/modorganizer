@@ -619,9 +619,19 @@ public:
   virtual QColor getColor() { return QColor(); }
 
   /*
-   *@return true if the color has been set successfully.
+   *@brief sets the color for the mod/separator, has no effect on other modinfo types.
    */
   virtual void setColor(QColor color) { }
+
+  /*
+   *@return whether the separator is collapsed or not, returns false if not a separator.
+   */
+  virtual bool isSeparatorCollapsed() const { return false; }
+
+  /*
+   *@brief sets the collapsed state of the separator, does nothing for other modinfo types.
+   */
+  virtual void setSeparatorCollapsed(bool collaspsed = false) { }
 
   /**
    * @brief adds the information that a file has been installed into this mod
