@@ -514,7 +514,29 @@ bool ModListSortProxy::filterAcceptsRow(int row, const QModelIndex &parent) cons
   } else {
     bool modEnabled = idx.sibling(row, 0).data(Qt::CheckStateRole).toInt() == Qt::Checked;
     unsigned int index = idx.data(Qt::UserRole + 1).toInt();
-    return filterMatchesMod(ModInfo::getByIndex(index), modEnabled);
+
+    if (m_FilterActive) {
+      return filterMatchesMod(ModInfo::getByIndex(index), modEnabled);
+    }
+    else {
+      if (sortColumn() == ModList::COL_PRIORITY) {
+        int rowPriority = m_Profile->getModPriority(index);
+        if (ModInfo::getByIndex(index)->hasFlag(ModInfo::FLAG_SEPARATOR)) {
+          // show all separators
+          return true;
+        }
+        // check for if the first separator over this mod is collapsed or not
+        for (int i = rowPriority-1; i > 0; i--) {
+          auto info = ModInfo::getByIndex(m_Profile->modIndexByPriority(i));
+          if (info->hasFlag(ModInfo::FLAG_SEPARATOR)) {
+            if (info->isSeparatorCollapsed()) {
+              return false;
+            }
+            break;
+          }
+        }
+      }
+    }
   }
 }
 
