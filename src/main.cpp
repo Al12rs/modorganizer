@@ -667,7 +667,7 @@ int runApplication(MOApplication &application, SingleInstance &instance,
 				  try {
 					  organizer.processRunner()
               .setFromShortcut(shortcut)
-              .setWaitForCompletion()
+              .setWaitForCompletion(ProcessRunner::Refresh)
               .run();
 
 					  return 0;
@@ -695,7 +695,7 @@ int runApplication(MOApplication &application, SingleInstance &instance,
           // pass the remaining parameters to the binary
           organizer.processRunner()
             .setFromFileOrExecutable(exeName, arguments)
-            .setWaitForCompletion()
+            .setWaitForCompletion(ProcessRunner::Refresh)
             .run();
 				  return 0;
 			  }
